@@ -192,7 +192,6 @@ for png_file in png_files:
 destination_file = r'C:\\temp\\Vidéos\\revolving-phillips.gif'
 
 # Enregistrez les images dans le fichier de destination
-#imageio.mimsave(destination_file, images, format='GIF')
 imageio.mimsave(destination_file, images, format='GIF', duration=0.15)
 
 @ test de fin de vidéo
