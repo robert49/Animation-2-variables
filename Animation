@@ -6,7 +6,7 @@ import numpy as np
 from dateutil.parser import parse
 import statsmodels.api as sm
 
-# Charger les données depuis le fichier Excel
+# Charger les données depuis le fichier Excel en indiquent son chemin d'accès
 data = pd.read_excel("C:\\Monnaie\\Eviews\\USA\\Variables_USA.xlsx", parse_dates=True)
 
 data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
@@ -180,21 +180,21 @@ import os
 # Générer la vidéo
 import imageio
 
-# Obtenez la liste de tous les fichiers png dans le dossier temp
+# Obtenir la liste de tous les fichiers png dans le dossier temp
 png_files = [os.path.join('c:\\temp', f) for f in os.listdir('c:\\temp') if f.endswith('.png')]
 
-# Créez la liste d'images à partir des fichiers png
+# Créer la liste d'images à partir des fichiers png
 images = []
 for png_file in png_files:
     images.append(imageio.imread(png_file))
 
-# Spécifiez le chemin complet du fichier de destination
+# Spécifier le chemin complet du fichier de destination
 destination_file = r'C:\\temp\\Vidéos\\revolving-phillips.gif'
 
-# Enregistrez les images dans le fichier de destination
+# Enregistrer les images dans le fichier de destination
 imageio.mimsave(destination_file, images, format='GIF', duration=0.15)
 
-@ test de fin de vidéo
+@ tester la finition de la vidéo, qui est au fomat gif, et qui devra être ensuite modifier en format mp4, par ex, pour être publiée
 print("Vidéo créée avec succès !")
 
 #Supprimer les fichiers png
