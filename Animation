@@ -1,0 +1,218 @@
+#Importer les librairies
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import numpy as np
+from dateutil.parser import parse
+import statsmodels.api as sm
+
+# Charger les données depuis le fichier Excel
+data = pd.read_excel("C:\\Monnaie\\Eviews\\USA\\Variables_USA.xlsx", parse_dates=True)
+
+data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
+data['Date'] = pd.to_datetime(data['Date'], format='%Y-%m-%d')
+
+# Ajouter une nouvelle colonne 'Date_parsed' au DataFrame
+data['Date_parsed'] = pd.to_datetime(data['Date'], infer_datetime_format=True)
+data.set_index('Date_parsed', inplace=True)
+
+start_date_period = data.index.min().strftime("%b %Y")
+end_date_period = data.index.max().strftime('%b %Y')
+
+coef_list_simple = []
+coef_list_simple_cumul = []
+
+# La taille de la fenêtre, i.e. le nombre de périodes (mois, trimestres ou années
+#w = input("Entrez, en mois, la taille de la fenêtre : ")
+#w = int(w)
+w = 24
+# Initialiser les variables 
+variable_1 = 'M2'
+variable_2 = 'cpi'
+
+# Boucle à travers les graphiques
+for i in range(len(data)-w+1):
+  
+  # Extraire les données pour la fenêtre actuelle
+  window = data.iloc[i:i+w].copy()
+  
+  fig, ax = plt.subplots(figsize=(9.7,6))
+    
+# Tracer tous les points en gris clair en arrière-plan
+  ax.scatter(data[variable_1], data[variable_2], color='lightgray', linewidth=0)
+    
+  
+# Afficher les statistiques de la régression
+  from scipy import stats
+  
+  x = window[variable_1]
+  y = window[variable_2]
+
+# Ajuster les dates de début et de fin de la période
+  if isinstance(window.index, pd.DatetimeIndex):
+      start_date = window.index.min().strftime("%b %Y")
+      end_date = window.index.max().strftime('%b %Y') 
+  else:
+      window.index = pd.to_datetime(df.index, format='%Y-%m-%d')
+      start_date = window.index.min().strftime("%b-%Y")
+      end_date = window.index.max().strftime(" %b-%Y")
+
+  slope, tvalue, r_value, p_value, std_err = stats.linregress(x, y)
+  r_squared = r_value**2
+  tvalue = slope / std_err 
+
+  ax.text(0.95, 0.30, f"R-carré: {r_squared:.2f}", transform=ax.transAxes, ha='right', va='top')
+  ax.text(0.95, 0.25, f"Coefficient: {slope:.4f}", transform=ax.transAxes, ha='right', va='top')
+  ax.text(0.95, 0.20, f"Erreur standard : {std_err:.2f}", transform=ax.transAxes, ha='right', va='top')
+  ax.text(0.95, 0.15, f"t-statistique: {tvalue:.2f}", transform=ax.transAxes, ha='right', va='top')
+  ax.text(0.95, 0.10, f"Probabilité: {p_value:.2f}", transform=ax.transAxes, ha='right', va='top')
+    
+  coef_list_simple.append({slope})
+  #print(coef_list_simple)
+    
+  #coef_list_simple = np.array([coef_list_simple])    
+  #coef_list_simple_cumul.extend(coef_list_simple)  
+      
+  ax.scatter(window.loc[:, variable_1], window.loc[:, variable_2], color='#696969', linewidth=0)
+  ax.scatter(window.loc[window.index.isin(range(i, i+w)), variable_1], window.loc[window.index.isin(range(i, i+w)), variable_2], color='coral')
+  ax.plot(window.loc[window.index.isin(range(i, i+w)), variable_1], window.loc[window.index.isin(range(i, i+w)), variable_2], color='coral', linestyle='--')
+  
+  ax.set_xlabel("M2 (taux de variation d'une année sur l'autre)")
+  ax.set_ylabel("Inflation (taux de variation d'une année sur l'autre)")
+  ax.set_title("USA  -  M2 vs Inflation - Fenêtre de 2 ans")
+  ax.set_xlim([data[variable_1].min(), data[variable_1].max()])
+  ax.set_ylim([data[variable_2].min(), data[variable_2].max()])
+
+#  ax.text(0.05, 0.95, f"{window.index[0].strftime('%b %Y')} - {window.index[-1].strftime('%b %Y')}", transform=ax.transAxes, ha='left', va='top')
+  ax.text(0.10, 0.95, f"Période : de {start_date_period} à {end_date_period}", transform=ax.transAxes)
+  ax.text(0.50, 0.95, f"Fenêtre : de {start_date} à {end_date}", transform=ax.transAxes)
+
+  # Condition pour extraire les dates de début et de fin de période
+  if isinstance(window.index[1], pd.Timestamp) and isinstance(window.index[-1], pd.Timestamp):
+
+        # Afficher la droite de régression
+        x = window[variable_1]
+        y = window[variable_2]
+        coeffs = np.polyfit(x, y, 1)
+        reg_line = f"y = {coeffs[0]:.2f}x + {coeffs[1]:.2f}"
+        ax.plot(x, np.polyval(coeffs, x), 'r', label=reg_line)
+    
+        start_date = window.index[0]
+        end_date = window.index[-1]
+        date_filter = (data.index >= start_date) & (data.index <= end_date)
+        filtered_data = data.loc[date_filter]
+        
+        # Pour USA
+  #      ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : U.S. Bureau of Labor Statistics, FRED, Federal Reserve Bank of St. Louis",
+        # Pour France, Zone Euro, NZ
+        ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : FRED",
+                transform=ax.transAxes, ha='center', va='center', fontsize=8)
+                
+        #ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : Banque Mondiale",
+        #        #transform=ax.transAxes, ha='center', va='center', fontsize=8)
+    
+        #transform=ax.transAxes, ha='center', va='center', fontsize=8)
+             
+  # définition de la marge intérieure
+        margin = 0.15
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        xmargin = (xmax - xmin) * margin
+        ymargin = (ymax - ymin) * margin
+
+  # ajustement des limites de l'axe avec la marge intérieure
+        ax.set_xlim(xmin - xmargin, xmax + xmargin)
+        ax.set_ylim(ymin - ymargin, ymax + ymargin)
+
+        plt.savefig(f"C:\\temp\\w{i:03d}.png", dpi=100)
+        plt.show()
+        plt.close()        
+        
+# Impression des résultats de la régression sur toute la période
+
+# Ajout d'une constante à la variable d'entrée x
+#x = sm.add_constant(x)
+
+# Création du modèle de régression linéaire
+#model = sm.OLS(y, x).fit()
+
+# Séparation des variables dépendantes (y) et indépendantes (x)
+x = data['M2']
+y = data['cpi']
+
+# Création du modèle de régression linéaire
+model = sm.OLS(y, sm.add_constant(x)).fit()
+
+# Extraction des résultats
+coefficients = model.params  # Coefficients estimés
+std_errors = model.bse  # Erreurs standard des coefficients
+r_squared = model.rsquared  # Coefficient de détermination R²
+p_values = model.pvalues  # Valeurs-p associées aux coefficients
+t_values = model.tvalues  # Valeurs-p associées aux coefficients
+
+fig, ax = plt.subplots(figsize=(9.7,6))
+
+ax.text(0.5, 0.95, f"Régression pour toute la période : de {start_date_period} à {end_date_period}",
+        transform=ax.transAxes, ha='center', va='center', fontsize=14)
+ax.text(0.95, 0.30, f"R-carré: {r_squared:.2f}", transform=ax.transAxes, ha='right', va='top')
+ax.text(0.95, 0.25, f"Coefficient: {coefficients[1]:.4f}", transform=ax.transAxes, ha='right', va='top')
+ax.text(0.95, 0.20, f"Erreur standard : {std_errors[1]:.2f}", transform=ax.transAxes, ha='right', va='top')
+ax.text(0.95, 0.15, f"t-statistique: {t_values[1]:.2f}", transform=ax.transAxes, ha='right', va='top')
+ax.text(0.95, 0.10, f"Probabilité: {p_values[1]:.2f}", transform=ax.transAxes, ha='right', va='top')
+ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : FRED",        
+        transform=ax.transAxes, ha='center', va='center', fontsize=8)
+             
+ax.scatter(data.loc[:, variable_1], data.loc[:, variable_2], color='#696969', linewidth=0)
+
+# Afficher la droite de régression
+
+coeffs = np.polyfit(x, y, 1)
+
+reg_line = f"y = {coeffs[0]:.2f}x + {coeffs[1]:.2f}"
+ax.plot(x, np.polyval(coeffs, x), 'r', label=reg_line)
+
+ax.set_xlabel("M2 (taux de variation d'une année sur l'autre)")
+ax.set_ylabel("Inflation (taux de variation d'une année sur l'autre)")
+ax.set_title("USA  -  M2 vs Inflation")
+ax.set_ylim([data[variable_2].min(), data[variable_2].max()])
+
+margin = 0.15
+xmin, xmax = ax.get_xlim()
+ymin, ymax = ax.get_ylim()
+xmargin = (xmax - xmin) * margin
+ymargin = (ymax - ymin) * margin
+
+# ajustement des limites de l'axe avec la marge intérieure
+ax.set_xlim(xmin - xmargin, xmax + xmargin)
+ax.set_ylim(ymin - ymargin, ymax + ymargin)
+
+plt.savefig(f"C:\\temp\\w{i:03d}.png", dpi=100)
+plt.show()
+plt.close()
+        
+# Créer la liste des noms de fichiers png dans le dossier temp
+import os
+
+# Générer la vidéo
+import imageio
+
+# Obtenez la liste de tous les fichiers png dans le dossier temp
+png_files = [os.path.join('c:\\temp', f) for f in os.listdir('c:\\temp') if f.endswith('.png')]
+
+# Créez la liste d'images à partir des fichiers png
+images = []
+for png_file in png_files:
+    images.append(imageio.imread(png_file))
+
+# Spécifiez le chemin complet du fichier de destination
+destination_file = r'C:\\temp\\Vidéos\\revolving-phillips.gif'
+
+# Enregistrez les images dans le fichier de destination
+#imageio.mimsave(destination_file, images, format='GIF')
+imageio.mimsave(destination_file, images, format='GIF', duration=0.15)
+
+print("Vidéo créée avec succès !")
+
+#Supprimer les fichiers png
+for png_file in png_files:
+    os.remove(png_file)
