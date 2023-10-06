@@ -16,19 +16,20 @@ data['Date'] = pd.to_datetime(data['Date'], format='%Y-%m-%d')
 data['Date_parsed'] = pd.to_datetime(data['Date'], infer_datetime_format=True)
 data.set_index('Date_parsed', inplace=True)
 
+#Inirialiser les périodes
 start_date_period = data.index.min().strftime("%b %Y")
 end_date_period = data.index.max().strftime('%b %Y')
 
+#Initialiser l"z tableaux qui serviront à récupérer les coefficients de régression
 coef_list_simple = []
 coef_list_simple_cumul = []
 
-# La taille de la fenêtre, i.e. le nombre de périodes (mois, trimestres ou années
-#w = input("Entrez, en mois, la taille de la fenêtre : ")
-#w = int(w)
+# Saisie de la taille de la fenêtre, i.e. le nombre de périodes (mois, trimestres ou années
 w = 24
-# Initialiser les variables 
-variable_1 = 'M2'
-variable_2 = 'cpi'
+
+# Initialisation les variables 
+variable_1 = 'M2' #variable explicative
+variable_2 = 'cpi' #variable dépendante
 
 # Boucle à travers les graphiques
 for i in range(len(data)-w+1):
@@ -36,12 +37,12 @@ for i in range(len(data)-w+1):
   # Extraire les données pour la fenêtre actuelle
   window = data.iloc[i:i+w].copy()
   
-  fig, ax = plt.subplots(figsize=(9.7,6))
+#Affichage du graphe 
+fig, ax = plt.subplots(figsize=(9.7,6))
     
 # Tracer tous les points en gris clair en arrière-plan
   ax.scatter(data[variable_1], data[variable_2], color='lightgray', linewidth=0)
-    
-  
+      
 # Afficher les statistiques de la régression
   from scipy import stats
   
@@ -61,6 +62,7 @@ for i in range(len(data)-w+1):
   r_squared = r_value**2
   tvalue = slope / std_err 
 
+  #Afficher les données de la régression sur le graphe
   ax.text(0.95, 0.30, f"R-carré: {r_squared:.2f}", transform=ax.transAxes, ha='right', va='top')
   ax.text(0.95, 0.25, f"Coefficient: {slope:.4f}", transform=ax.transAxes, ha='right', va='top')
   ax.text(0.95, 0.20, f"Erreur standard : {std_err:.2f}", transform=ax.transAxes, ha='right', va='top')
@@ -68,11 +70,7 @@ for i in range(len(data)-w+1):
   ax.text(0.95, 0.10, f"Probabilité: {p_value:.2f}", transform=ax.transAxes, ha='right', va='top')
     
   coef_list_simple.append({slope})
-  #print(coef_list_simple)
-    
-  #coef_list_simple = np.array([coef_list_simple])    
-  #coef_list_simple_cumul.extend(coef_list_simple)  
-      
+        
   ax.scatter(window.loc[:, variable_1], window.loc[:, variable_2], color='#696969', linewidth=0)
   ax.scatter(window.loc[window.index.isin(range(i, i+w)), variable_1], window.loc[window.index.isin(range(i, i+w)), variable_2], color='coral')
   ax.plot(window.loc[window.index.isin(range(i, i+w)), variable_1], window.loc[window.index.isin(range(i, i+w)), variable_2], color='coral', linestyle='--')
@@ -83,7 +81,6 @@ for i in range(len(data)-w+1):
   ax.set_xlim([data[variable_1].min(), data[variable_1].max()])
   ax.set_ylim([data[variable_2].min(), data[variable_2].max()])
 
-#  ax.text(0.05, 0.95, f"{window.index[0].strftime('%b %Y')} - {window.index[-1].strftime('%b %Y')}", transform=ax.transAxes, ha='left', va='top')
   ax.text(0.10, 0.95, f"Période : de {start_date_period} à {end_date_period}", transform=ax.transAxes)
   ax.text(0.50, 0.95, f"Fenêtre : de {start_date} à {end_date}", transform=ax.transAxes)
 
@@ -102,17 +99,10 @@ for i in range(len(data)-w+1):
         date_filter = (data.index >= start_date) & (data.index <= end_date)
         filtered_data = data.loc[date_filter]
         
-        # Pour USA
-  #      ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : U.S. Bureau of Labor Statistics, FRED, Federal Reserve Bank of St. Louis",
-        # Pour France, Zone Euro, NZ
+        # Afficher coordonnées de l'auteur ainsi que les sources
         ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : FRED",
                 transform=ax.transAxes, ha='center', va='center', fontsize=8)
-                
-        #ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : Banque Mondiale",
-        #        #transform=ax.transAxes, ha='center', va='center', fontsize=8)
-    
-        #transform=ax.transAxes, ha='center', va='center', fontsize=8)
-             
+                  
   # définition de la marge intérieure
         margin = 0.15
         xmin, xmax = ax.get_xlim()
@@ -124,17 +114,12 @@ for i in range(len(data)-w+1):
         ax.set_xlim(xmin - xmargin, xmax + xmargin)
         ax.set_ylim(ymin - ymargin, ymax + ymargin)
 
+        #sauvegarder chaque image de chaque passage
         plt.savefig(f"C:\\temp\\w{i:03d}.png", dpi=100)
         plt.show()
         plt.close()        
         
 # Impression des résultats de la régression sur toute la période
-
-# Ajout d'une constante à la variable d'entrée x
-#x = sm.add_constant(x)
-
-# Création du modèle de régression linéaire
-#model = sm.OLS(y, x).fit()
 
 # Séparation des variables dépendantes (y) et indépendantes (x)
 x = data['M2']
@@ -165,7 +150,6 @@ ax.text(0.5, -0.12, "Créé par @robert_cauneau - Source : FRED",
 ax.scatter(data.loc[:, variable_1], data.loc[:, variable_2], color='#696969', linewidth=0)
 
 # Afficher la droite de régression
-
 coeffs = np.polyfit(x, y, 1)
 
 reg_line = f"y = {coeffs[0]:.2f}x + {coeffs[1]:.2f}"
@@ -211,6 +195,7 @@ destination_file = r'C:\\temp\\Vidéos\\revolving-phillips.gif'
 #imageio.mimsave(destination_file, images, format='GIF')
 imageio.mimsave(destination_file, images, format='GIF', duration=0.15)
 
+@ test de fin de vidéo
 print("Vidéo créée avec succès !")
 
 #Supprimer les fichiers png
